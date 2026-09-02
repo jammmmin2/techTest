@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.naon.biz.gw.doc.dao.ListHeaderDAO" >
+
+	<resultMap type="com.naon.biz.gw.doc.bean.PrefixBean" id="PreFixMap">
+		<id column="PREFIX_ID" property="prefixId" jdbcType="VARCHAR"/>
+		<result column="BRD_ID" property="brdId" jdbcType="VARCHAR"/>
+		<result column="PREFIX_NAME" property="prefixName" jdbcType="VARCHAR"/>
+		<result column="PREFIX_NAME_JSON" property="prefixNameJson" jdbcType="VARCHAR"/>
+		<result column="PREFIX_ORDER" property="prefixOrder" jdbcType="INTEGER"/>
+		<result column="USE_YN" property="useYn" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<resultMap type="com.naon.biz.gw.doc.bean.SkinBean" id="SkinMap">
+		<id column="SKIN_ID" property="skinId" jdbcType="VARCHAR"/>
+		<result column="CMP_ID" property="cmpId" jdbcType="VARCHAR"/>
+		<result column="SKIN_NAME" property="skinName" jdbcType="VARCHAR"/>
+		<result column="SKIN_CSS_URL" property="skinCssUrl" jdbcType="VARCHAR"/>
+		<result column="THUMB_URL" property="thumbUrl" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<resultMap type="com.naon.biz.gw.doc.bean.BannerBean" id="CmmBannerMap">
+		<id column="BANNER_ID" property="bannerId" jdbcType="VARCHAR"/>
+		<result column="BRD_ID" property="brdId" jdbcType="VARCHAR"/>
+		<result column="BANNER_FLAG" property="bannerFlag" jdbcType="VARCHAR"/>
+		<result column="FILE_NAME" property="fileName" jdbcType="VARCHAR"/>
+		<result column="FILE_URL" property="fileUrl" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<resultMap type="com.naon.biz.gw.doc.bean.ListHeaderBean" id="CmmListHeaderMap">
+		<id column="HEADER_ID" property="headerId" jdbcType="VARCHAR"/>
+		<result column="BRD_ID" property="brdId" jdbcType="VARCHAR"/>
+		<result column="COLUMN_TYPE" property="columnType" jdbcType="VARCHAR"/>
+		<result column="COLUMN_NAME" property="columnName" jdbcType="VARCHAR"/>
+		<result column="COLUMN_ORDER" property="columnOrder" jdbcType="INTEGER"/>
+		<result column="USE_YN" property="useYn" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	
+	
+
+	<insert id="insertListHeader" parameterType="com.naon.biz.gw.doc.bean.ListHeaderBean">
+		INSERT INTO CMM_LIST_HEADER (
+		   HEADER_ID, BRD_ID, COLUMN_TYPE,
+		   `COLUMN_NAME`, COLUMN_ORDER, USE_YN,
+		   REG_DATE)
+		VALUES (#{headerId},#{brdId},#{columnType},
+		   #{columnName},#{columnOrder},#{useYn},
+		   NOW())
+	</insert>
+
+	<update id="updateListHeader" parameterType="com.naon.biz.gw.doc.bean.ListHeaderBean">
+		UPDATE CMM_LIST_HEADER
+		SET    HEADER_ID  = #{headerId},
+		       BRD_ID     = #{brdId},
+		       COLUMN_TYPE  = #{columnType},
+		       `COLUMN_NAME`  = #{columnName},
+		       COLUMN_ORDER = #{columnOrder},
+		       USE_YN       = #{useYn}
+		WHERE  HEADER_ID  = #{headerId}
+	</update>
+	
+	<update id="updateToAddMyMileage" parameterType="com.naon.biz.gw.doc.bean.MileageBean">
+			UPDATE BRD_MY_MILEAGE
+			SET    MLG_PT    = MLG_PT + #{mlgPt},
+			       REG_CNT   = REG_CNT + #{regCnt}
+			WHERE  EMP_ID    = #{empId}
+			AND    DIV_YM    = #{divYm}
+	</update>
+	
+	<update id="updateToAddDeptMileage" parameterType="com.naon.biz.gw.doc.bean.MileageBean">
+			UPDATE BRD_DEPT_MILEAGE
+			SET    MLG_PT    = MLG_PT + #{mlgPt},
+			       REG_CNT   = REG_CNT + #{regCnt}
+			WHERE  DEPT_ID   = #{deptId}
+			AND    DIV_YM    = #{divYm}
+	</update>
+	
+	<select id="getExistMyMileage" parameterType="com.naon.biz.gw.doc.bean.MileageBean" resultType="_int">
+		SELECT
+			COUNT(*)
+		FROM BRD_MY_MILEAGE B
+		WHERE B.EMP_ID = #{empId}
+		  AND B.DIV_YM IN (DATE_FORMAT(NOW(),'%Y%m'), '999912')
+	</select>
+	
+	<insert id="insertMyMileageTotal" parameterType="com.naon.biz.gw.doc.bean.MileageBean">
+		INSERT INTO BRD_MY_MILEAGE (
+		   EMP_ID, DIV_YM, MLG_PT, REG_CNT,
+		   MLG_ORDER)
+		SELECT
+		   #{empId}, '999912', #{mlgPt}, #{regCnt},
+		   (SELECT IFNULL(MAX(MLG_ORDER),0)+1 FROM BRD_MY_MILEAGE WHERE DIV_YM='999912')
+	</insert>
+	
+	<insert id="insertMyMileageMonth" parameterType="com.naon.biz.gw.doc.bean.MileageBean">
+		INSERT INTO BRD_MY_MILEAGE (
+		   EMP_ID, DIV_YM, MLG_PT, REG_CNT,
+		   MLG_ORDER)
+		SELECT
+		   #{empId}, DATE_FORMAT(NOW(),'%Y%m'), #{mlgPt}, #{regCnt},
+		   (SELECT IFNULL(MAX(MLG_ORDER),0)+1 FROM BRD_MY_MILEAGE WHERE DIV_YM=DATE_FORMAT(NOW(),'%Y%m'))
+	</insert>
+	
+	<update id="updateMyMileageTotal" parameterType="com.naon.biz.gw.doc.bean.MileageBean">
+		UPDATE BRD_MY_MILEAGE
+		SET    MLG_PT    = MLG_PT + #{mlgPt},
+		       REG_CNT   = REG_CNT + #{regCnt}
+		WHERE  EMP_ID    = #{empId}
+		AND    DIV_YM    = '999912'
+	</update>
+	
+	<update id="updateMyMileage" parameterType="com.naon.biz.gw.doc.bean.MileageBean">
+		UPDATE BRD_MY_MILEAGE
+		SET    MLG_PT    = MLG_PT + #{mlgPt},
+		       REG_CNT   = REG_CNT + #{regCnt}
+		WHERE  EMP_ID    = #{empId}
+		AND    DIV_YM    IN ( DATE_FORMAT(NOW(),'%Y%m'), '999912')
+	</update>
+	
+	<select id="getExistDeptMileage" parameterType="com.naon.biz.gw.doc.bean.MileageBean" resultType="_int">
+		SELECT
+			COUNT(*)
+		FROM BRD_DEPT_MILEAGE B
+		WHERE B.DEPT_ID = (SELECT DEPT_ID FROM ORG_MY_JOB WHERE BASS_DEPT_YN='Y' AND EMP_ID = #{empId})
+		  AND B.DIV_YM IN (DATE_FORMAT(NOW(),'%Y%m'), '999912')
+	</select>
+	
+	<insert id="insertDeptMileageTotal" parameterType="com.naon.biz.gw.doc.bean.MileageBean">
+		INSERT INTO BRD_DEPT_MILEAGE (
+		   DEPT_ID,
+		   DIV_YM, MLG_PT, REG_CNT,
+		   MLG_ORDER)
+		SELECT
+		   (SELECT DEPT_ID FROM ORG_MY_JOB WHERE BASS_DEPT_YN='Y' AND EMP_ID = #{empId}),
+		   '999912', #{mlgPt}, #{regCnt},
+		   (SELECT IFNULL(MAX(MLG_ORDER),0)+1 FROM BRD_MY_MILEAGE WHERE DIV_YM='999912')
+	</insert>
+	
+	<insert id="insertDeptMileageMonth" parameterType="com.naon.biz.gw.doc.bean.MileageBean">
+		INSERT INTO BRD_DEPT_MILEAGE (
+		   DEPT_ID,
+		   DIV_YM, MLG_PT, REG_CNT,
+		   MLG_ORDER)
+		SELECT
+		   (SELECT DEPT_ID FROM ORG_MY_JOB WHERE BASS_DEPT_YN='Y' AND EMP_ID = #{empId}),
+		   DATE_FORMAT(NOW(),'%Y%m'), #{mlgPt}, #{regCnt},
+		   (SELECT IFNULL(MAX(MLG_ORDER),0)+1 FROM BRD_MY_MILEAGE WHERE DIV_YM=DATE_FORMAT(NOW(),'%Y%m'))
+	</insert>
+	
+	<update id="updateDeptMileageTotal" parameterType="com.naon.biz.gw.doc.bean.MileageBean">
+		UPDATE BRD_DEPT_MILEAGE
+		SET    MLG_PT    = MLG_PT + #{mlgPt},
+		       REG_CNT   = REG_CNT + #{regCnt}
+		WHERE  DEPT_ID   = (SELECT DEPT_ID FROM ORG_MY_JOB WHERE BASS_DEPT_YN='Y' AND EMP_ID = #{empId})
+		AND    DIV_YM    = '999912'
+	</update>
+	
+	<update id="updateDeptMileage" parameterType="com.naon.biz.gw.doc.bean.MileageBean">
+		UPDATE BRD_DEPT_MILEAGE
+		SET    MLG_PT    = MLG_PT + #{mlgPt},
+		       REG_CNT   = REG_CNT + #{regCnt}
+		WHERE  DEPT_ID   = (SELECT DEPT_ID FROM ORG_MY_JOB WHERE BASS_DEPT_YN='Y' AND EMP_ID = #{empId})
+		AND    DIV_YM    IN ( DATE_FORMAT(NOW(),'%Y%m'), '999912')
+	</update>
+	
+	<select id="getPrefixList" parameterType="com.naon.biz.gw.doc.bean.PrefixBean" resultMap="PreFixMap">
+		SELECT
+			B.PREFIX_ID	,
+			B.BRD_ID	,
+			IFNULL(FUNC_I18N(B.PREFIX_ID, #{langCd, jdbcType=VARCHAR}, 'DOC_PREFIX_NAME'),B.PREFIX_NAME) PREFIX_NAME,
+			B.PREFIX_ORDER	,
+			FUNC_I18N_JSON(B.PREFIX_ID, 'DOC_PREFIX_NAME') PREFIX_NAME_JSON,
+			B.USE_YN	
+		FROM CMM_LIST_PREFIX B
+		WHERE BRD_ID = #{brdId}
+			AND USE_YN = 'Y'
+		ORDER BY PREFIX_ORDER ASC
+	</select>
+	
+	<select id="getSkinList" parameterType="String" resultMap="SkinMap">
+			SELECT
+				B.SKIN_ID      ,
+				B.CMP_ID       ,
+				B.SKIN_NAME    ,
+				B.SKIN_CSS_URL ,
+				B.THUMB_URL    
+			FROM CMM_LIST_SKIN B
+	</select>
+	
+	<insert id="insertPrefix" parameterType="com.naon.biz.gw.doc.bean.PrefixBean">
+		INSERT INTO CMM_LIST_PREFIX (
+			PREFIX_ID, BRD_ID, PREFIX_NAME,
+			PREFIX_ORDER, USE_YN, REG_DATE)
+		VALUES (
+			#{prefixId}, #{brdId}, #{prefixName},
+			#{prefixOrder}, #{useYn}, NOW())
+	</insert>
+	
+	<update id="updatePrefix" parameterType="com.naon.biz.gw.doc.bean.PrefixBean">
+		UPDATE CMM_LIST_PREFIX
+		SET	BRD_ID       = #{brdId},
+			PREFIX_NAME  = #{prefixName},
+			PREFIX_ORDER = #{prefixOrder}
+		WHERE PREFIX_ID    =#{prefixId}
+	</update>
+	
+	<update id="updateUseNotPrefix" parameterType="String">
+		UPDATE CMM_LIST_PREFIX
+		SET    USE_YN     = 'N'
+		WHERE  PREFIX_ID    =#{prefixId}
+	</update>
+	
+	<delete id="deletePrefix" parameterType="String">
+		DELETE FROM CMM_LIST_PREFIX
+		WHERE PREFIX_ID    =#{prefixId}
+	</delete>
+	
+	<insert id="insertBanner" parameterType="com.naon.biz.gw.doc.bean.BannerBean">
+		INSERT INTO CMM_LIST_BANNER (
+		   BANNER_ID, BRD_ID, BANNER_FLAG,
+		   FILE_NAME, FILE_URL, REG_DATE)
+		VALUES (
+		#{bannerId},#{brdId},#{bannerFlag},
+		#{fileName},#{fileUrl}, NOW())
+	</insert>
+	
+	<update id="updateBanner" parameterType="com.naon.biz.gw.doc.bean.BannerBean">
+		UPDATE CMM_LIST_BANNER
+		SET    BRD_ID      = #{brdId},
+		       BANNER_FLAG = #{bannerFlag},
+		       FILE_NAME   = #{fileName},
+		       FILE_URL    = #{fileUrl},
+		       REG_DATE    = #{regDate}
+		WHERE  BANNER_ID   = #{bannerId}
+	</update>
+
+	<delete id="deleteBanner" parameterType="com.naon.biz.gw.doc.bean.BannerBean">
+		DELETE FROM CMM_LIST_BANNER
+		WHERE BANNER_ID = #{bannerId}
+	</delete>
+	
+	<select id="getBannerList" parameterType="String" resultMap="CmmBannerMap">
+		SELECT
+			B.BANNER_ID	,
+			B.BRD_ID	,
+			B.BANNER_FLAG	,
+			B.FILE_NAME	,
+			B.FILE_URL	
+		FROM CMM_LIST_BANNER B
+		WHERE BRD_ID = #{brdId}
+		ORDER BY BANNER_FLAG DESC
+	</select>
+	
+	<select id="getListHeader" parameterType="String" resultMap="CmmListHeaderMap">
+		SELECT
+			B.HEADER_ID   ,
+			B.BRD_ID     ,
+			B.COLUMN_TYPE  ,
+			B.`COLUMN_NAME`  ,
+			B.COLUMN_ORDER ,
+			B.USE_YN     
+		FROM CMM_LIST_HEADER B
+		WHERE BRD_ID = #{brdId}
+		ORDER BY HEADER_ID ASC
+	</select>
+	
+	<select id="getSkin" parameterType="String" resultMap="SkinMap">
+		SELECT
+			B.SKIN_ID      ,
+			B.CMP_ID       ,
+			B.SKIN_NAME    ,
+			B.SKIN_CSS_URL ,
+			B.THUMB_URL    
+		FROM CMM_LIST_SKIN B
+		WHERE SKIN_ID = #{skinId}
+	</select>
+	
+	<select id="isUsedPrefix" parameterType="com.naon.biz.gw.doc.bean.PrefixBean" resultType="String">
+		SELECT '1' FROM DUAL
+		WHERE EXISTS (SELECT ATCL_NO
+		              FROM DOC_ARTICLE
+		              WHERE BRD_ID=#{brdId}
+		              AND PREFIX_ID=#{prefixId}
+		              )
+		   OR EXISTS (SELECT 1
+		              FROM APP_DOCUMENT_BINDER
+		              WHERE BIND_ID=#{brdId}
+		              AND PREFIX_ID=#{prefixId}
+		              )
+	</select>
+	
+</mapper>

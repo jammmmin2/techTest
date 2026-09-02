@@ -12,6 +12,7 @@ Test = {
 	},
 	
 	beforeBind: function() {
+		console.log("1");
 
 	},
 	
